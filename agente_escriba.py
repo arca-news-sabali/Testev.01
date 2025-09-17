@@ -53,7 +53,7 @@ def registrar_no_arsenal():
         print("\n[FASE 4] Enviando registros para o Arsenal no GitHub...")
         # A primeira vez que você rodar isso, ele pedirá usuário e senha.
         # Use seu TOKEN como senha.
-        executar_comando(["git", "push", "-u", "origin", "master"], cwd=CAMINHO_DO_PROJETO)
+        executar_comando(["git", "push", "-u", "origin", "main"], cwd=CAMINHO_DO_PROJETO)
             
         print("\nSincronização com o Arsenal concluída com sucesso!")
 
