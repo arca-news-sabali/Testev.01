@@ -69,5 +69,7 @@ def registrar_no_arsenal():
 
 if __name__ == "__main__":
     registrar_no_arsenal()
+# --- FIM DO SCRIPT ---
+# A jornada é o destino. A caçada continua..
 
 
