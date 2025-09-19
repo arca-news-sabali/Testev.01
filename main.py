@@ -3,11 +3,21 @@
 # ===================================================================
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
 # --- INICIALIZAÇÃO DA API ---
 app = FastAPI()
+
+# Configure CORS to allow all hosts (required for Replit proxy)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Modelo de dados para a requisição que virá do frontend
 class Prompt(BaseModel):
@@ -41,4 +51,4 @@ async def receber_comando(prompt: Prompt):
 # --- EXECUÇÃO DO SERVIDOR ---
 if __name__ == "__main__":
     # O uvicorn vai rodar o nosso servidor FastAPI no Replit
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=5000)
