@@ -1,0 +1,37 @@
+--- Agente Arqueólogo v2.1 (Dossiê de Emergência) INICIADO ---
+Fuso Horário: America/Sao_Paulo | Data da Missão: 17/09/2025
+
+[FASE 1] Conectando ao servidor IMAP...
+Conexão estabelecida. Buscando artefatos do dia...
+Encontrado(s) 22 artefato(s) potencial(is).
+
+[FASE 2] Coletando e enriquecendo dados...
+  - Artefato 'Artefato Sagrado - Your Google Account is live  dont miss out on pote.eml' processado.
+  - Artefato 'Artefato Sagrado -  Termine de configurar sua nova Conta do Google no.eml' processado.
+  - Artefato 'Artefato Sagrado - Em breve seu dispositivo Android vai fazer parte d.eml' processado.
+  - Artefato 'Artefato Sagrado - Your Manus Journey Begins Now.eml' processado.
+  - Artefato 'Artefato Sagrado - Proton Verification Code.eml' processado.
+  - Artefato 'Artefato Sagrado - GitHub A thirdparty GitHub Application has been ad.eml' processado.
+  - Artefato 'Artefato Sagrado - Alerta de segurança.eml' processado.
+  - Artefato 'Artefato Sagrado - Alerta de segurança.eml' processado.
+  - Artefato 'Artefato Sagrado - Alerta de segurança.eml' processado.
+  - Artefato 'Artefato Sagrado - Verificação em duas etapas ativada.eml' processado.
+  - Artefato 'Artefato Sagrado - Alerta de segurança.eml' processado.
+  - Artefato 'Artefato Sagrado - Teste.eml' processado.
+  - Artefato 'Artefato Sagrado - Teste.eml' processado.
+  - Artefato 'Artefato Sagrado - GitHub Copilot Whats in your free plan.eml' processado.
+  - Artefato 'Artefato Sagrado - GitHub Sudo email verification code.eml' processado.
+  - Artefato 'Artefato Sagrado - GitHub A finegrained personal access token has bee.eml' processado.
+  - Artefato 'Artefato Sagrado - GitHub A personal access token classic has been ad.eml' processado.
+  - Artefato 'Artefato Sagrado - Hugging Face Click this link to confirm your email.eml' processado.
+  - Artefato 'Artefato Sagrado - Dossiê dia 39.eml' processado.
+  - Artefato 'Artefato Sagrado - Welcome to Qdrant Cloud.eml' processado.
+  - Artefato 'Artefato Sagrado - Your Qdrant cluster is live heres what to do next.eml' processado.
+  - Artefato 'Artefato Sagrado - GitHub Sudo email verification code.eml' processado.
+Coleta finalizada.
+
+[FASE 3] Montando e enviando o dossiê...
+
+Dossiê de Emergência enviado com sucesso para o QG!
+
+--- Agente Arqueólogo v2.1 FINALIZADO ---

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "agente-janus",
+  "private_key_id": "ecaacf3fd4b7e8397914bda1fd23c97bcd6cde2f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDHpV8jJTq/t0+0\noDxqinC5jzqqKjsSIkym7YugA2o8+ZfcYJWjItMLvZkV9HNPevz3pbI0Hooz2b8T\nXhZPtSNrF9S+S9EHyXzl/5g9dajLReNVlQYMOcWwwWXTWDzP6A4dmC7PO7TnTsIa\nK4UuNpSF5VLolaQTAxZAa4yVpefulMl+Pax2wxR3e0ryfhe6wEG0m5pBan+n6a6o\nuimVZkEcWEiA7WyvK4w3whrJRHAss6A3SwVomQNv/SMBF/oY3G8zlSQGIe3hLSZ4\nqNIdc5A4AfEPjN78FPdvxf0glmCVIqHaTXcGhne/XpkWOaYTvkT0cBaBqYR0FfLA\nVbCl/hjbAgMBAAECggEABubkWMOzDz5YHBIkueOFWB+SffWDIJ0HnLG+T6QulQ26\nk/Im2i1HBzM2dU2D0FibzDfx5t6zam15r0K5GhJUt3bAcmpj6eqrowvosx873E3T\nOSSIwVLHTyqwdCkAbojti/+0hpI1g9WeMjy/mERncrrl2Ifr1IMZJCr+VjdrwudZ\nk13b+v4KqKB+69GnupHN/8BiNGaewJNDBCmUqmNo9hroMT+FnyCfdUSGxH+NJPXU\nGGYe8WWrxPvNbomkERxb1pZx84DvWb2mn8OtIyyZTxsfseRjq04cdazu77zTfKIX\nHNUNWmrgCeeY5LDJsWchpiKssYWYxrJ04XIHkVc2QQKBgQDvxZHJFqHdmDAwSeFT\njk6lWB5xbV6hdmOIDwzzrHnbFEhFw3a7XmeBP/FMgTEz57c7dzc2IHDqKwB1Ajqb\nJ/XGiIClf1gSz6M0RLZz7iiMVE+TC0ZND17MpKemINW2PgvgGPTdzAnn4GhyRMqB\nq9mAAO5xdW6pH8jsHw+rcYEeuwKBgQDVKI8JSCxTr0ramEbLJ1YqQLmm/QGuc5Wj\nmIRTx9ifj6EFGGqBG6HkHIobaflc+qQQ4qDST87uEhOR5c9nmBRjaSydCjW9sJem\n8Q9OAZlgWXW2rNlILRDjS1Gk2XAT0mjuGBrFgWtMU8KTQciDLwqT66xpjfxzuJKt\nE6sSC08cYQKBgAOvJnlPhrcv8nWbfQHaquyxeO5HPu/+MLNTf+ByowCxxBaGVVm1\nrqN2xw9k4MuqYM9iGpATWYjPllc17I6bw5QEXu2sEj9fv2M7Nw5691aIqRxaTP88\nIDnGwei0knQVaftMht6tlu1gLlqrIe1yJYpo+UD3C/c/TMgMBiKdQN2nAoGAOrKb\niOPOCRFpXH64Z/MiICqItTpQvzhnCZDTR7rtpSrJHX0Wvwzb7NQLF/d7yqXejiPK\nQ3/krNxfdTrCfXV8j8+DkI8iM2UwrbEOFN4N3WFlL/OzNdPrJZw1FF8oJN05Ne9/\nV8oGwRMDrsdbrvxCPm+Un9CQp1E5Wt3iqupgU6ECgYB73Ip6mNdIkOLTxOJ0JB5n\nRLwLKLDkZMPMDLtPVAOJfj2/mu8rwazagQ+LQMe4Wz5P3+w7WoZWKTmLozlbnvb/\nx8x6+xmsSvJ+7pRHgW6yHC9L0MA/a4SMJqc5jmKWepH1HO50fWc5ewAebinsTjFK\nhNv2b4weaMvEaaQNNyG3TQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "organizacao-arquivos-compl-424@agente-janus.iam.gserviceaccount.com",
+  "client_id": "109151611242017694383",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/organizacao-arquivos-compl-424%40agente-janus.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
