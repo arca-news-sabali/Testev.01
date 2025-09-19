@@ -9,3 +9,4 @@
 # Repositórios locais clonados
 ConstituicaoViva_local_oraculo/
 *.json
+*.env

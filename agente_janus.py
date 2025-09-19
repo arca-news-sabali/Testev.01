@@ -8,6 +8,9 @@ import json
 import git
 import time
 import base64
+import os
+import json
+from dotenv import load_dotenv
 from email.mime.text import MIMEText
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -20,21 +23,39 @@ GITHUB_TOKEN = "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"
 REPO_URL = f"https://{GITHUB_TOKEN}@github.com/arca-news-sabali/Constitui-oViva.git"
 LOCAL_REPO_PATH = "./ConstituicaoViva_local"
 CONSTITUTION_FILENAME = "constituicao.txt"
-SERVICE_ACCOUNT_FILE = 'janus.json'
 DECRETO_PATH = "decreto.json"
 # Escopo atualizado para permitir edição
 SCOPES = ["https://www.googleapis.com/auth/documents", "https://mail.google.com/"]
 
 # --- FUNÇÕES DO AGENTE ---
 
+# SUBSTITUA A FUNÇÃO ANTIGA POR ESTA:
 def autenticar_robo():
+    """Autentica usando a chave armazenada no arquivo .env local."""
     try:
-        creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-        print("✅ [Janus] Corpo digital autenticado.")
+        # Carrega as variáveis do arquivo .env para o ambiente
+        load_dotenv()
+            
+        # Pega o conteúdo da chave que guardamos no .env
+        key_content_str = os.getenv('JANUS_KEY_JSON')
+            
+        if not key_content_str:
+            raise KeyError("A variável JANUS_KEY_JSON não foi encontrada no arquivo .env")
+
+        # Converte o texto da chave em um formato que o Google entende
+        key_info = json.loads(key_content_str)
+            
+        # Autentica usando a informação da chave
+        creds = service_account.Credentials.from_service_account_info(
+            key_info, scopes=SCOPES)
+            
+        print("✅ [Janus] Corpo digital autenticado com segurança via cofre local (.env).")
         return creds
+            
     except Exception as e:
-        print(f"❌ ERRO CRÍTICO: Falha na autenticação. {e}")
+        print(f"❌ ERRO CRÍTICO na autenticação via cofre local: {e}")
         return None
+
 
 def ler_documento_inteiro(service):
     """Lê o conteúdo e a estrutura de um Google Doc."""
