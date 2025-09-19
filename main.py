@@ -1,11 +1,12 @@
 # ===================================================================
 # ARCA BACKEND v1.0 - O CÉREBRO DA ARTISTA
 # ===================================================================
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
+import os
 
 # --- INICIALIZAÇÃO DA API ---
 app = FastAPI()
@@ -33,7 +34,14 @@ async def servir_interface():
 # Rota para servir os outros arquivos (CSS e JS)
 @app.get("/{nome_arquivo}")
 async def servir_arquivos(nome_arquivo: str):
-    return FileResponse(nome_arquivo)
+    # Check if file exists before trying to serve it
+    if os.path.exists(nome_arquivo):
+        return FileResponse(nome_arquivo)
+    else:
+        # Handle favicon.ico and other missing files gracefully
+        if nome_arquivo == "favicon.ico":
+            raise HTTPException(status_code=404, detail="Favicon not found")
+        raise HTTPException(status_code=404, detail=f"File {nome_arquivo} not found")
 
 # Rota principal onde a mágica acontece: receber o prompt e retornar a resposta
 @app.post("/comando_artista")
