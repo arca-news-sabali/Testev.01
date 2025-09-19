@@ -1,0 +1,11 @@
+# Arquivos de credenciais e chaves
+*.json
+*.pem
+
+# Logs e erros
+*.log
+*.err
+
+# Repositórios locais clonados
+ConstituicaoViva_local/
+ConstituicaoViva_local_oraculo/
