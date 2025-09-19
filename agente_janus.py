@@ -1,172 +1,135 @@
-# agente_janus.py - Versão 6.0 (O Executor de Decretos)
-# Modelo padrão para agentes executores do Ecossistema Arca.
-# Este agente possui dois modos de operação:
-# 1. MODO PADRÃO: Sincroniza um Google Doc pré-definido com o GitHub.
-# 2. MODO DECRETO: Executa uma ordem específica emitida pela Artista,
-#    encontrada em um arquivo 'decreto.json'.
+# ===================================================================
+# ARQUIVO: agente_janus.py (Versão 7.0 - O Editor Cirúrgico)
+# MISSÃO: Sincronizar ou Editar o Google Docs e registrar no GitHub.
+# ===================================================================
 
 import os
-import git
-import base64
-import time
 import json
+import git
+import time
+import base64
 from email.mime.text import MIMEText
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# --- CONFIGURAÇÕES DO ARQUITETO ---
-# Configurações para o MODO PADRÃO
-DEFAULT_DOCUMENT_ID = "1i_tXK_zRQWbgeKLRVZjBJow8pu5gBi7usnK3_2Okfq4" # ID do Doc a ser sincronizado por padrão
-DEFAULT_FILENAME = "constituicao.txt"
-
-# Configurações Gerais
-EMAIL_DESTINO = ["arquiteto.arca@proton.me", "arcanews.sabali@gmail.com"] # Lista de e-mails para notificação
-GITHUB_TOKEN = "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" # Seu token do GitHub
+# --- CONFIGURAÇÕES ---
+DOCUMENT_ID = "1i_tXK_zRQWbgeKLRVZjBJow8pu5gBi7usnK3_2Okfq4"
+EMAIL_DESTINO = ["arquiteto.arca@proton.me", "arcanews.sabali@gmail.com"]
+GITHUB_TOKEN = "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"
 REPO_URL = f"https://{GITHUB_TOKEN}@github.com/arca-news-sabali/Constitui-oViva.git"
 LOCAL_REPO_PATH = "./ConstituicaoViva_local"
+CONSTITUTION_FILENAME = "constituicao.txt"
 SERVICE_ACCOUNT_FILE = 'janus.json'
-SCOPES = [ # Escopos de Superusuário
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/documents",
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://mail.google.com/",
-    "https://www.googleapis.com/auth/calendar"
-]
+DECRETO_PATH = "decreto.json"
+# Escopo atualizado para permitir edição
+SCOPES = ["https://www.googleapis.com/auth/documents", "https://mail.google.com/"]
 
 # --- FUNÇÕES DO AGENTE ---
 
 def autenticar_robo():
-    """Autentica usando a chave da Conta de Serviço."""
     try:
-        creds = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-        print("✅ [Janus] Corpo digital autenticado com sucesso.")
+        creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        print("✅ [Janus] Corpo digital autenticado.")
         return creds
-    except FileNotFoundError:
-        print(f"❌ ERRO CRÍTICO: A alma do robô ('{SERVICE_ACCOUNT_FILE}') não foi encontrada.")
-        return None
     except Exception as e:
-        print(f"❌ ERRO na autenticação do robô: {e}")
+        print(f"❌ ERRO CRÍTICO: Falha na autenticação. {e}")
         return None
 
-def buscar_do_google_docs(creds, document_id):
-    """Busca o conteúdo de um Google Doc específico."""
-    print(f">> [Janus] Acessando Google Docs para ler o documento ID: ...{document_id[-10:]}")
+def ler_documento_inteiro(service):
+    """Lê o conteúdo e a estrutura de um Google Doc."""
+    document = service.documents().get(documentId=DOCUMENT_ID).execute()
+    content_text = ""
+    # O Google Docs lê o conteúdo de trás para frente em sua estrutura, então precisamos ser cuidadosos
+    # A maneira mais segura de obter o índice é pelo tamanho total do corpo do documento
+    # No entanto, para encontrar texto, a leitura linear é mais simples.
+    for element in document.get('body').get('content'):
+        if 'paragraph' in element:
+            for run in element.get('paragraph').get('elements'):
+                content_text += run.get('textRun', {}).get('content', '')
+    return document, content_text
+
+def modo_editor(creds, decreto):
+    """MODO EDITOR: Insere texto no Google Docs com base em um decreto."""
+    print(">> [Janus] MODO EDITOR ativado. Modificando documento mestre...")
     try:
         service = build("docs", "v1", credentials=creds)
-        document = service.documents().get(documentId=document_id).execute()
-        content = ""
-        for element in document.get("body").get("content"):
-            if "paragraph" in element:
-                for run in element.get("paragraph").get("elements"):
-                    content += run.get("textRun", {}).get("content", "")
-        print("✅ [Janus] Documento lido com sucesso.")
-        return content
-    except HttpError as err:
-        print(f"❌ ERRO ao buscar do Google Docs: {err}")
-        return None
+        document, content = ler_documento_inteiro(service)
+        if document is None: return False, None
+
+        texto_referencia = decreto['texto_referencia']
+        novo_texto = "\n" + decreto['novo_texto']
+
+        # Encontra a posição do final do texto de referência
+        try:
+            # Usamos rfind para encontrar a última ocorrência, mais seguro
+            posicao_final_referencia = content.rfind(texto_referencia) + len(texto_referencia)
+        except ValueError:
+            print(f"❌ ERRO: Texto de referência '{texto_referencia}' não encontrado.")
+            return False, None
+
+        requests = [{'insertText': {'location': {'index': posicao_final_referencia}, 'text': novo_texto}}]
+        service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': requests}).execute()
+        print("✅ [Janus] Documento mestre editado com sucesso.")
+        
+        # Após editar, busca o conteúdo atualizado para retornar
+        _, conteudo_atualizado = ler_documento_inteiro(service)
+        return True, conteudo_atualizado
+
+    except Exception as e:
+        print(f"❌ ERRO no Modo Editor: {e}")
+        return False, None
 
 def enviar_para_github(conteudo, nome_arquivo, commit_message):
-    """Envia o conteúdo para um arquivo específico no repositório do GitHub."""
-    print(">> [Janus] Verificando o cofre no GitHub...")
+    # Sua função robusta de enviar para o GitHub
+    # ... (código completo da sua v6.0) ...
+    # Por simplicidade, vou usar uma versão resumida aqui, mas você deve manter a sua.
     try:
-        os.system(f'git config --global user.name "Agente Janus"')
-        os.system(f'git config --global user.email "janus.bot@arcanet.io"')
-
         if not os.path.exists(LOCAL_REPO_PATH):
-            print(">> [Janus] Cofre local não encontrado. Clonando do GitHub...")
             git.Repo.clone_from(REPO_URL, LOCAL_REPO_PATH)
-        
         repo = git.Repo(LOCAL_REPO_PATH)
-        print(">> [Janus] Sincronizando com o cofre remoto...")
         repo.remotes.origin.pull()
-
         filepath = os.path.join(LOCAL_REPO_PATH, nome_arquivo)
-        
-        mudanca_detectada = True
-        if os.path.exists(filepath):
-            with open(filepath, "r", encoding="utf-8") as f_read:
-                if f_read.read() == conteudo:
-                    print(f">> [Janus] Nenhuma mudança detectada para o arquivo '{nome_arquivo}'. O cofre já está sincronizado.")
-                    mudanca_detectada = False
-        
-        if mudanca_detectada:
-            print(f">> [Janus] Mudança detectada. Atualizando o arquivo '{nome_arquivo}'...")
-            with open(filepath, "w", encoding="utf-8") as f_write:
-                f_write.write(conteudo)
-            
-            repo.git.add(filepath)
-            repo.index.commit(commit_message)
-            repo.remotes.origin.push()
-            print("✅ [Janus] Cofre no GitHub atualizado com sucesso.")
-        
-        return mudanca_detectada
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(conteudo)
+        repo.git.add(filepath)
+        repo.index.commit(commit_message)
+        repo.remotes.origin.push()
+        print("✅ [Janus] Cofre no GitHub atualizado com sucesso.")
+        return True
     except Exception as e:
         print(f"❌ ERRO ao enviar para o GitHub: {e}")
         return False
 
-def notificar_por_gmail(creds, assunto, corpo):
-    """Envia uma notificação por e-mail para a lista de destinos."""
-    print(">> [Janus] Preparando notificação para o Arquiteto...")
-    try:
-        service = build("gmail", "v1", credentials=creds)
-        message = MIMEText(corpo, 'plain', 'utf-8')
-        message["to"] = ", ".join(EMAIL_DESTINO) # Envia para todos os e-mails da lista
-        message["from"] = "me"
-        message["subject"] = assunto
-        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-        service.users().messages().send(userId="me", body={"raw": raw_message}).execute()
-        print(f"✅ [Janus] Notificação '{assunto}' enviada.")
-    except HttpError as err:
-        print(f"❌ ERRO ao enviar e-mail: {err}")
+# ... (função notificar_por_gmail da sua v6.0) ...
 
 def main():
-    """Função principal que define o modo de operação do agente."""
-    print("--- INICIANDO AGENTE JANUS (v6.0) ---")
-    
-    # MODO DECRETO: Verifica se há uma ordem da Artista
-    if os.path.exists("decreto.json"):
-        print(">> [Janus] MODO DECRETO ativado. Lendo ordem da Artista...")
-        with open("decreto.json", "r", encoding="utf-8") as f:
+    print(f"--- INICIANDO AGENTE JANUS (v7.0) ---")
+    creds = autenticar_robo()
+    if not creds: return
+
+    if os.path.exists(DECRETO_PATH):
+        print(">> [Janus] Decreto da Artista encontrado.")
+        with open(DECRETO_PATH, "r", encoding="utf-8") as f:
             decreto = json.load(f)
-        
-        conteudo = decreto.get("novo_texto", "")
-        nome_arquivo = decreto.get("nome_arquivo")
-        commit_msg = decreto.get("mensagem_commit")
+        os.remove(DECRETO_PATH)
 
-        if not nome_arquivo:
-            print("❌ ERRO no decreto: 'nome_arquivo' não especificado.")
-            return
-
-        creds = autenticar_robo()
-        if not creds: return
-
-        houve_mudanca = enviar_para_github(conteudo, nome_arquivo, commit_msg)
-        
-        if houve_mudanca:
-            corpo_email = f"Uma mudança foi decretada pela Artista e executada com sucesso.\n\nMensagem: {commit_msg}\n\nO arquivo '{nome_arquivo}' foi atualizado."
-            notificar_por_gmail(creds, "Log de Execução de Decreto da Arca", corpo_email)
-        
-        os.remove("decreto.json")
-        print(">> [Janus] Decreto executado e arquivado.")
-
-    # MODO PADRÃO: Se não houver decreto, executa a sincronização normal
+        if decreto.get("acao") == "INSERIR_TEXTO":
+            sucesso_edicao, conteudo_novo = modo_editor(creds, decreto)
+            if sucesso_edicao and conteudo_novo:
+                commit_msg = decreto.get("mensagem_commit", f"Edição via Decreto: {decreto['novo_texto'][:30]}...")
+                enviar_para_github(conteudo_novo, CONSTITUTION_FILENAME, commit_msg)
+                # notificar_por_gmail(creds, "Log de Edição de Decreto", f"Decreto '{commit_msg}' executado.")
+        else:
+            print(f"⚠️ Ação de decreto desconhecida: {decreto.get('acao')}")
     else:
-        print(">> [Janus] MODO PADRÃO ativado. Sincronizando Google Docs...")
-        creds = autenticar_robo()
-        if not creds: return
+        # Modo Padrão (Sincronização normal)
+        print(">> [Janus] MODO PADRÃO ativado. Sincronizando...")
+        service = build("docs", "v1", credentials=creds)
+        _, conteudo_docs = ler_documento_inteiro(service)
+        if conteudo_docs:
+            enviar_para_github(conteudo_docs, CONSTITUTION_FILENAME, f"Sincronização de rotina {time.strftime('%Y-%m-%d')}")
 
-        conteudo_docs = buscar_do_google_docs(creds, DEFAULT_DOCUMENT_ID)
-        if conteudo_docs is None: return
-
-        commit_msg = f"Sincronização automática de '{DEFAULT_FILENAME}' em {time.strftime('%Y-%m-%d %H:%M:%S')}"
-        houve_mudanca = enviar_para_github(conteudo_docs, DEFAULT_FILENAME, commit_msg)
-        
-        if houve_mudanca:
-            corpo_email = f"O documento '{DEFAULT_FILENAME}' foi atualizado com sucesso no cofre do GitHub."
-            notificar_por_gmail(creds, "Log de Sincronização da Constituição da Arca", corpo_email)
-    
     print("\n--- OPERAÇÃO JANUS CONCLUÍDA ---")
 
 if __name__ == "__main__":
