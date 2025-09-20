@@ -1,88 +1,96 @@
 # ===================================================================
-# AGENTE ARSENAL (v1.0) - O Leitor da Memória Mestra
-# ARQUITETO: Phillippe Matheus de Oliveira-Araujo
-# MISSÃO: Clonar o repositório da Constituição (o Arsenal), ler seu
-#         conteúdo, vetorizá-lo com Cohere e indexá-lo no Pinecone.
+# AGENTE ARSENAL v2.0 - O INDEXADOR DA MEMÓRIA MESTRA
 # ===================================================================
 import os
-import subprocess
 import shutil
 import cohere
 from pinecone import Pinecone, ServerlessSpec
+from dotenv import load_dotenv
 
-# --- CONFIGURAÇÕES DO ARQUITETO ---
-COHERE_API_KEY = "SMgSisrqfrrd0KHdqfTjTue9b3cad4fRSXjbd7Qn"
-PINECONE_API_KEY = "pcsk_4AcTXt_Ep2kRYtz6vi7hVzBeirjQzYCHxtJkCF743azxBv69nnhgmELifjXRnYxKsqjWKB"
-
-# Configurações do Arsenal (GitHub)
-# A chave do Janus para acesso de leitura/escrita
-GITHUB_TOKEN = "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" 
-REPO_URL = f"https://{GITHUB_TOKEN}@github.com/arca-news-sabali/Constitui-oViva.git"
-LOCAL_REPO_PATH = "./ConstituicaoViva_temp" # Pasta temporária para clonar
-CONSTITUTION_FILENAME = "constituicao.txt"
-
-# Configurações da Nuvem Vetorial (Pinecone)
-NOME_DO_INDICE = "memoria-arca"
-MODELO_EMBEDDING = "embed-multilingual-v2.0"
-DIMENSAO_VETOR = 768
-
-def executar_missao_arsenal():
-    """Função principal que executa a missão de indexação do Arsenal."""
+# --- FUNÇÃO PRINCIPAL DA MISSÃO ---
+def executar_missao_indexacao():
     print("--- AGENTE ARSENAL INICIADO ---")
-    
-    try:
-        # --- FASE 1: CLONAR O ARSENAL ---
-        print("FASE 1: Acessando o Arsenal no GitHub...")
+
+    # --- CARREGAR SEGREDOS DO COFRE LOCAL ---
+    load_dotenv()
+    COHERE_API_KEY = os.getenv("COHERE_API_KEY")
+    PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
         
-        # Remove a pasta temporária antiga, se existir, para garantir um clone limpo
+    # Validação das chaves
+    if not all([COHERE_API_KEY, PINECONE_API_KEY, GITHUB_TOKEN]):
+        print("❌ ERRO CRÍTICO: Uma ou mais chaves de API (Cohere, Pinecone, GitHub) não foram encontradas no arquivo .env.")
+        return
+
+    # --- CONFIGURAÇÕES ---
+    REPO_URL = f"https://{GITHUB_TOKEN}@github.com/arca-news-sabali/ConstituicaoViva.git"
+    LOCAL_REPO_PATH = "./ConstituicaoViva_temp"
+    CONSTITUTION_FILENAME = "constituicao.txt"
+    PINECONE_INDEX_NAME = "memoria-arca"
+
+    try:
+        # FASE 1: ACESSAR O ARSENAL
+        print("\nFASE 1: Acessando o Arsenal no GitHub...")
         if os.path.exists(LOCAL_REPO_PATH):
             shutil.rmtree(LOCAL_REPO_PATH)
             
-        # Clona o repositório do GitHub
-        subprocess.run(["git", "clone", REPO_URL, LOCAL_REPO_PATH], check=True)
+        subprocess.run(f"git clone {REPO_URL} {LOCAL_REPO_PATH}", shell=True, check=True)
         print("✅ Arsenal clonado com sucesso.")
 
-        # --- FASE 2: LER A CONSTITUIÇÃO ---
+        # FASE 2: EXTRAIR O CÓDICE
         print("\nFASE 2: Extraindo o Códice da Constituição...")
-        caminho_do_arquivo = os.path.join(LOCAL_REPO_PATH, CONSTITUTION_FILENAME)
-        
-        if not os.path.exists(caminho_do_arquivo):
-            print(f"❌ ERRO: Arquivo '{CONSTITUTION_FILENAME}' não encontrado no Arsenal.")
-            return
-
-        with open(caminho_do_arquivo, 'r', encoding='utf-8') as f:
-            conteudo_constituicao = f.read()
-        
-        # Limpa a pasta temporária após a leitura
+        caminho_arquivo = os.path.join(LOCAL_REPO_PATH, CONSTITUTION_FILENAME)
+        if not os.path.exists(caminho_arquivo):
+            raise FileNotFoundError(f"Arquivo '{CONSTITUTION_FILENAME}' não encontrado no repositório.")
+            
+        with open(caminho_arquivo, "r", encoding="utf-8") as f:
+            texto_constituicao = f.read()
+            
         shutil.rmtree(LOCAL_REPO_PATH)
         print("✅ Códice extraído e área de trabalho limpa.")
 
-        # --- FASE 3: VETORIZAR E INDEXAR ---
+        # FASE 3: FORJAR A MEMÓRIA VETORIAL
         print("\nFASE 3: Forjando a memória vetorial...")
+            
+        # Conectar ao Cohere
         co = cohere.Client(COHERE_API_KEY)
+            
+        # Conectar ao Pinecone
         pc = Pinecone(api_key=PINECONE_API_KEY)
 
-        # Conecta ao índice (assumindo que já foi criado)
-        index = pc.Index(NOME_DO_INDICE)
+        # Verificar/Criar o índice no Pinecone
+        if PINECONE_INDEX_NAME not in pc.list_indexes().names():
+            pc.create_index(
+                name=PINECONE_INDEX_NAME,
+                dimension=1024, # Dimensão para o modelo 'embed-multilingual-v3.0'
+                metric='cosine',
+                spec=ServerlessSpec(cloud='aws', region='us-east-1')
+            )
+            print(f"--> Índice '{PINECONE_INDEX_NAME}' criado no Pinecone.")
 
-        # Cria o vetor usando a Cohere
-        response = co.embed(texts=[conteudo_constituicao], model=MODELO_EMBEDDING)
-        vetor_constituicao = response.embeddings[0]
-        
-        # Envia o vetor para o Pinecone
-        index.upsert(vectors=[{
-            "id": "constituicao_viva_master", # Um ID único para este documento
-            "values": vetor_constituicao,
-            "metadata": {"fonte": "GitHub Arsenal"}
-        }])
-        
+        index = pc.Index(PINECONE_INDEX_NAME)
+
+        # Vetorizar o texto com Cohere
+        response = co.embed(
+            texts=[texto_constituicao],
+            model='embed-multilingual-v3.0',
+            input_type='search_document'
+        )
+        vetor = response.embeddings[0]
+
+        # Enviar para o Pinecone
+        index.upsert(vectors=[{'id': 'constituicao_viva_01', 'values': vetor, 'metadata': {'fonte': 'GitHub Arsenal'}}])
+            
+        stats = index.describe_index_stats()
         print("\n✅ MISSÃO CONCLUÍDA. A memória mestra da Arca foi indexada na nuvem.")
-        print(f"--> Total de memórias no índice: {index.describe_index_stats()['total_vector_count']}")
+        print(f"--> Total de memórias no índice: {stats['total_vector_count']}")
 
-    except subprocess.CalledProcessError as e:
-        print(f"❌ ERRO CRÍTICO NA FASE 1 (GIT): Não foi possível clonar o Arsenal. Verifique a URL e o Token. Erro: {e.stderr}")
     except Exception as e:
-        print(f"❌ ERRO CRÍTICO NA MISSÃO: {e}")
+        print(f"❌ FALHA CRÍTICA NA MISSÃO DO ARSENAL: {e}")
+        # Garante a limpeza mesmo em caso de erro
+        if os.path.exists(LOCAL_REPO_PATH):
+            shutil.rmtree(LOCAL_REPO_PATH)
 
 if __name__ == "__main__":
-    executar_missao_arsenal()
+    import subprocess # Adicionado para garantir que está no escopo
+    executar_missao_indexacao()
